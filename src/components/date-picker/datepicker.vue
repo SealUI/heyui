@@ -37,8 +37,8 @@
       </div>
 
       <div class="h-date-footer" v-if="hasConfirm & !inline">
-        <button class="h-btn h-btn-text" @click="clear">{{'h.common.clear' | hlang}}</button>
-        <button class="h-btn h-btn-primary h-btn-s" @click="hide">{{'h.common.confirm' | hlang}}</button>
+        <button type="button" class="h-btn h-btn-text" @click="clear">{{'h.common.clear' | hlang}}</button>
+        <button type="button" class="h-btn h-btn-primary h-btn-s" @click="hide">{{'h.common.confirm' | hlang}}</button>
       </div>
     </div>
   </div>
@@ -237,10 +237,7 @@ export default {
     parse(value, initShow = true) {
       if (value != '' && !utils.isNull(value)) {
         try {
-          if (this.type == 'time') {
-            value = `1980-01-01 ${value}`;
-          }
-          this.nowView = manba(value);
+          this.nowView = manba(value, this.nowFormat);
           this.nowDate = this.nowView.format('k');
           if (initShow) {
             if (this.type == 'week') {
@@ -284,9 +281,12 @@ export default {
       return this.placeholder || this.t('h.datepicker.placeholder');
     },
     nowFormat() {
-      let format = this.format || options.format[this.type];
-      if (this.type == 'datetime' && this.hasSeconds) {
-        format = options.format.datetimesecond;
+      let format = this.format;
+      if (!format) {
+        format = options.format[this.type];
+        if (this.type == 'datetime' && this.hasSeconds) {
+          format = options.format.datetimesecond;
+        }
       }
       return format;
     },

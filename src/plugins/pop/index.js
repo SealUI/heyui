@@ -14,7 +14,8 @@ const DEFAULT_OPTIONS = {
   equalWidth: false,
   type: 'dropdown',
   preventOverflow: false,
-  getContainer: null
+  getContainer: null,
+  maxWidth: null
 };
 
 /**
@@ -55,7 +56,7 @@ class Pop {
     this.options = options;
 
     const triggerEvents = typeof options.trigger === 'string' ? options.trigger.split(' ').filter((trigger) => {
-      return ['click', 'hover', 'focus', 'contextMenu'].indexOf(trigger) !== -1;
+      return ['click', 'hover', 'focus', 'manual', 'contextMenu'].indexOf(trigger) !== -1;
     }) : [];
 
     this.isOpen = false;
@@ -135,6 +136,11 @@ class Pop {
     }
     if (options.className) {
       utils.addClass(popNode, options.className);
+    }
+
+    const contentNode = popNode.querySelector(this.innerSelector);
+    if (contentNode && options.maxWidth) {
+      contentNode.style.maxWidth = `${options.maxWidth}px`;
     }
 
     this.popNode = popNode;
@@ -391,7 +397,7 @@ class Pop {
       reference.addEventListener(event, func, event == 'blur');
     });
 
-    if (options.closeOnClickBody) {
+    if (triggerEvents.indexOf('manual') == -1) {
       this.documentHandler = (e) => {
         if (!this.popNode || e.target.parentNode == null) return;
         if (!this.isOpen || reference.contains(e.target) || this.popNode.contains(e.target)) {

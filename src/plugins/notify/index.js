@@ -1,5 +1,6 @@
 import utils from 'heyui/src/utils/utils';
 import locale from 'heyui/src/locale';
+import Draggable from 'heyui/src/plugins/draggable';
 import Vue from 'vue';
 
 const Default = {
@@ -15,7 +16,8 @@ const Default = {
   timeout: 0,
   width: false,
   global: false,
-  noPadding: false
+  noPadding: false,
+  draggable: false
 };
 
 const TYPE = {
@@ -71,7 +73,7 @@ class Notify {
           color = b.color;
         }
         if (color) color = `h-btn-${color}`;
-        footeHtml += `<button class="h-btn ${color}" attr="${attr}" >${name}</button>`;
+        footeHtml += `<button type="button" class="h-btn ${color}" attr="${attr}" >${name}</button>`;
       }
       html += `<footer class="${param.type}-footer">${footeHtml}</footer>`;
     }
@@ -107,12 +109,13 @@ class Notify {
     } else {
       $content.innerHTML = content;
     }
-
-    if (param.component != undefined && Vue) {
-      this.vue = new Vue({
+    const VueInstance = Vue || window.Vue;
+    if (param.component != undefined && VueInstance) {
+      this.vue = new VueInstance({
         el: $content,
         i18n: param.$i18n,
         router: param.$router,
+        store: param.$store,
         render(createElement) {
           let keys = Object.keys(param.events || {});
           let events = {
@@ -179,6 +182,33 @@ class Notify {
     }
     if (param.width) {
       $container.style.width = `${param.width}px`;
+    }
+
+    if (param.draggable) {
+      utils.addClass($body, 'h-notify-draggable');
+      let x = 0;
+      let y = 0;
+      let rect = null;
+      let header = $container.querySelector('.h-modal-header');
+      if (header) {
+        this.drag = new Draggable(header, {
+          start(event) {
+            x = event.clientX;
+            y = event.clientY;
+            rect = $container.getBoundingClientRect();
+            $container.style.left = `${rect.left}px`;
+            $container.style.top = `${rect.top}px`;
+            $container.style.transform = 'initial';
+            $container.style.transition = 'none';
+          },
+          drag(event) {
+            let offsetX = event.clientX - x;
+            let offsetY = event.clientY - y;
+            $container.style.left = `${rect.left + offsetX}px`;
+            $container.style.top = `${rect.top + offsetY}px`;
+          }
+        });
+      }
     }
 
     let parentDom = param.parent || document.body;
@@ -275,6 +305,10 @@ class Notify {
     const $body = this.$body;
     if (this.vm) {
       that.vm.$destroy();
+    }
+
+    if (this.drag) {
+      this.drag.destroy();
     }
 
     let body = document.documentElement;
